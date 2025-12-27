@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h2>Data Ingestion UI</h2>
+  <textarea id="jsonInput" rows="5" style="width:100%">{"source": "client A", "payload": {"amount": "1200", "timestamp": "2024/01/01"}}</textarea>
+  <br>
+  <label><input type="checkbox" id="failCheck"> Simulate DB Failure</label>
+  <button onclick="sendData()">Submit Event</button>
+
+  <h3>Stats</h3>
+  <div id="stats">Count: 0 | Total: 0</div>
+
+  <h3>Logs</h3>
+  <div id="logs"></div>
+
+  <script>
+    async function sendData() {
+      const rawJson = document.getElementById('jsonInput').value;
+      const simulateFailure = document.getElementById('failCheck').checked;
+      
+      const res = await fetch('http://localhost:3001/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-simulate-failure': simulateFailure },
+        body: rawJson
+      });
+      const data = await res.json();
+      document.getElementById('logs').innerHTML += `<div>${JSON.stringify(data)}</div>`;
+      updateStats();
+    }
+
+    async function updateStats() {
+      const res = await fetch('http://localhost:3001/aggregates');
+      const stats = await res.json();
+      document.getElementById('stats').innerText = `Count: ${stats.total_count} | Total: ${stats.total_amount}`;
+    }
+  </script>
+</body>
+</html>
